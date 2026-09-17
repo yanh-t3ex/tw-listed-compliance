@@ -10,6 +10,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        /* 啟用平滑滾動 */
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #f8fafc;
@@ -55,7 +61,7 @@
         }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col relative">
 
     <!-- 頂部標題與導覽列：手機版取消 sticky (非固定，隨畫面滾動)，桌機版保持 sm:sticky -->
     <header class="bg-slate-900 text-white shadow-md sm:sticky top-0 z-50 no-print">
@@ -595,13 +601,19 @@
 
     </main>
 
+    <!-- 回到頂端按鈕 -->
+    <button id="backToTopBtn" onclick="scrollToTop()" class="hidden fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center z-50 no-print" title="回到頂端">
+        <i class="fa-solid fa-arrow-up text-lg"></i>
+    </button>
+
     <!-- 頁尾 -->
     <footer class="bg-slate-100 border-t border-slate-200 py-6 text-center text-sm text-slate-500 no-print mt-auto">
-        <p>股票上市公司應辦業務事項總覽 Dashboard | 方便列印、簡報與業務日常核對使用</p>
+        <p>股票上市公司應辦業務事項總覽 </p>
     </footer>
 
-    <!-- JS 分頁切換邏輯 -->
+    <!-- JS 邏輯 -->
     <script>
+        // 分頁切換邏輯
         function switchTab(tabId) {
             // 更新按鈕 active 樣式
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -616,6 +628,24 @@
                 const target = document.getElementById('page-' + tabId);
                 if (target) target.style.display = 'block';
             }
+        }
+
+        // 回到頂端邏輯
+        const backToTopBtn = document.getElementById('backToTopBtn');
+
+        window.onscroll = function() {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                backToTopBtn.classList.remove('hidden');
+            } else {
+                backToTopBtn.classList.add('hidden');
+            }
+        };
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
     </script>
 </body>

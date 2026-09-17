@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上市有價證券發行人應辦業務事項總覽 Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+            font-size: 16px;
+        }
+        
+        /* 隱藏手機版橫向滾動條，確保頁籤滾動輕薄平滑 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 列印與簡報排版優化 */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .page-break {
+                page-break-after: always;
+                break-after: page;
+            }
+            body {
+                background-color: #ffffff;
+                font-size: 15px;
+            }
+            .section-page {
+                display: block !important;
+            }
+            .card-box {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+                break-inside: avoid;
+            }
+        }
+
+        .tab-btn.active {
+            background-color: #1e3a8a;
+            color: #ffffff;
+            border-color: #1e3a8a;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- 頂部標題與導覽列：手機版取消 sticky (非固定，隨畫面滾動)，桌機版保持 sm:sticky -->
+    <header class="bg-slate-900 text-white shadow-md sm:sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-5 flex flex-row items-center justify-between gap-3">
+            <div class="flex items-center space-x-2.5 sm:space-x-3">
+                <div class="bg-blue-600 p-2 sm:p-3 rounded-lg text-white shrink-0">
+                    <i class="fa-solid fa-list-check text-lg sm:text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-2xl font-bold tracking-wide line-clamp-1 sm:line-clamp-none">上市有價證券發行人應辦業務事項總覽</h1>
+                    <!-- 手機版隱藏副標題 -->
+                    <p class="hidden sm:block text-sm text-slate-400 mt-0.5">股票上市公司 — 定期與不定期申報核對行事曆</p>
+                </div>
+            </div>
+            
+            <!-- 操作按鈕：手機版隱藏列印按鈕 -->
+            <div class="hidden sm:flex items-center gap-2">
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-base font-medium transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-print"></i> 列印 / 匯出 PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- 四大分類主選單：優化手機版輕薄橫向滑動列 -->
+        <div class="bg-slate-800 border-t border-slate-700">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex overflow-x-auto no-scrollbar space-x-1.5 sm:space-x-2 py-1.5 sm:py-2.5">
+                <button onclick="switchTab('all')" id="tab-all" class="tab-btn active px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-base font-medium border border-slate-600 text-slate-300 hover:text-white transition whitespace-nowrap shrink-0">
+                    全部顯示
+                </button>
+                <button onclick="switchTab('sec1')" id="tab-sec1" class="tab-btn px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-base font-medium border border-slate-600 text-slate-300 hover:text-white transition whitespace-nowrap shrink-0">
+                    1. 每月定期申報 (5/10/15/20/月底)
+                </button>
+                <button onclick="switchTab('sec2')" id="tab-sec2" class="tab-btn px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-base font-medium border border-slate-600 text-slate-300 hover:text-white transition whitespace-nowrap shrink-0">
+                    2. 按季申報事項
+                </button>
+                <button onclick="switchTab('sec3')" id="tab-sec3" class="tab-btn px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-base font-medium border border-slate-600 text-slate-300 hover:text-white transition whitespace-nowrap shrink-0">
+                    3. 年度與特定月份申報 (1~12月及全年度)
+                </button>
+                <button onclick="switchTab('sec4')" id="tab-sec4" class="tab-btn px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-base font-medium border border-slate-600 text-slate-300 hover:text-white transition whitespace-nowrap shrink-0">
+                    4. 不定期申報事項
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要內容區 -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- ================= 分類 1：每月定期申報 ================= -->
+        <section id="page-sec1" class="section-page space-y-8">
+            <div class="flex items-center justify-between border-b-2 border-blue-900 pb-3">
+                <h2 class="text-3xl font-bold text-slate-900">每月定期申報事項</h2>
+                <span class="text-base text-slate-500 font-medium">依每月 5日、10日、15日、20日及月底分類</span>
+            </div>
+
+            <!-- 5 日前 -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-blue-800 flex items-center gap-2 border-l-4 border-blue-600 pl-3">
+                    <i class="fa-regular fa-clock"></i> 每月 5 日前
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between items-start">
+                                <span class="bg-slate-100 text-slate-700 font-semibold px-2.5 py-1 rounded text-sm">定期 5 日</span>
+                                <span class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-medium">每月 5 日前</span>
+                            </div>
+                            <h4 class="font-bold text-base text-slate-900">國內海外有價證券異動情形申報及上市普通股股數維護</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">申報前月異動情形；掛牌普通股股數維護（生效日為當月15日）。</p>
+                        </div>
+                    </div>
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between items-start">
+                                <span class="bg-slate-100 text-slate-700 font-semibold px-2.5 py-1 rounded text-sm">定期 5 日</span>
+                                <span class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-medium">每月 5 日前</span>
+                            </div>
+                            <h4 class="font-bold text-base text-slate-900">海外股票流通、存託憑證兌回、海外公司債轉換達10%股東資料</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每月五日前申報上月底之資料。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10 日前 -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-amber-800 flex items-center gap-2 border-l-4 border-amber-500 pl-3">
+                    <i class="fa-regular fa-clock"></i> 每月 10 日前
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">定期 10 日</span><span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium">10 日前</span></div>
+                            <h4 class="font-bold text-base text-slate-900">月營業額資訊及衍生性商品交易資訊</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">申報上月營業額與衍生性商品交易資訊。</p>
+                        </div>
+                    </div>
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">定期 10 日</span><span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium">10 日前</span></div>
+                            <h4 class="font-bold text-base text-slate-900">資金貸與及背書保證明細表資料</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每月十日前申報上月份資料。</p>
+                        </div>
+                    </div>
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">定期 10 日</span><span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium">10 日前</span></div>
+                            <h4 class="font-bold text-base text-slate-900">募集發行或私募國內公司債異動情形</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每月結束後十日內申報上月異動。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 15 日前 -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-emerald-800 flex items-center gap-2 border-l-4 border-emerald-500 pl-3">
+                    <i class="fa-regular fa-clock"></i> 每月 15 日前
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">定期 15 日</span>
+                                <span class="text-xs bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">ESG 公司治理優化</span>
+                            </div>
+                            <h4 class="font-bold text-base text-slate-900">內部人股權異動申報作業</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">法定截止日為每月十五日前申報上月份董事、監察人、經理人及大股東持股異動。</p>
+                            <p class="text-xs text-blue-700 bg-blue-50 p-2 rounded border border-blue-100 font-medium mt-1">
+                                <i class="fa-solid fa-circle-info mr-1"></i><strong>公司政策：</strong> 因應 ESG 評分指標，本公司內部人股權異動申報作業均統一提前於每月 10 日前完成申報。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 20 日前 -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-indigo-800 flex items-center gap-2 border-l-4 border-indigo-500 pl-3">
+                    <i class="fa-regular fa-clock"></i> 每月 20 日前
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">定期 20 日</span><span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-medium">20 日前</span></div>
+                            <h4 class="font-bold text-base text-slate-900">各項產品業務營收統計表（自願性申報）</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每月二十日前公告上月份產品銷售營收統計。</p>
+                        </div>
+                    </div>
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">定期 20 日</span><span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-medium">20 日前</span></div>
+                            <h4 class="font-bold text-base text-slate-900">海外子公司公告資訊（中譯本）</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">申報海外上市子公司上月份於海外市場公告之資訊中譯本。</p>
+                        </div>
+                    </div>
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">定期 20 日</span><span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-medium">20 日前</span></div>
+                            <h4 class="font-bold text-base text-slate-900">海外有價證券流通及大股東兌回轉換申報</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每月 20 日前申報截至當月 15 日止，海外股票/存託憑證/海外公司債之關係人及累計申請兌回、轉換或認股達發行總額 10% 以上股東資料。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每月月底 -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-purple-800 flex items-center gap-2 border-l-4 border-purple-500 pl-3">
+                    <i class="fa-regular fa-clock"></i> 每月月底 (30 / 31 日前)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-1.5 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">定期 月底</span><span class="text-xs bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full font-medium">每月月底</span></div>
+                            <h4 class="font-bold text-base text-slate-900">沖銷母子公司間交易後與關係人間重要交易資訊</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每月月底前申報截至上月份之關係人交易資訊。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="page-break"></div>
+
+        <!-- ================= 分類 2：按季申報事項 ================= -->
+        <section id="page-sec2" class="section-page space-y-8">
+            <div class="flex items-center justify-between border-b-2 border-blue-900 pb-3">
+                <h2 class="text-3xl font-bold text-slate-900">按季申報事項</h2>
+                <span class="text-base text-slate-500 font-medium">依每季結束後 10日內、15日內、1個月內、45日內分類</span>
+            </div>
+
+            <!-- 每季結束後 10 日內 -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-amber-800 flex items-center gap-2 border-l-4 border-amber-500 pl-3">
+                    <i class="fa-regular fa-clock"></i> 每季結束後 10 日內 (1/10, 4/10, 7/10, 10/10 前)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-2 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">按季 10 日</span><span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-bold">每季結束 10 日內</span></div>
+                            <h4 class="font-bold text-base text-slate-900">獨立董事兼任與經歷資訊申報</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">申報上市公司獨立董事之主要現職、經歷及兼任其他公司董監事資訊（重點申報上一季異動資訊）。</p>
+                        </div>
+                    </div>
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-2 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">按季 10 日</span><span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-bold">每季結束 10 日內</span></div>
+                            <h4 class="font-bold text-base text-slate-900">全體董事出席董事會及進修情形</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">申報全體董事出（列）席董事會及進修情形。</p>
+                            <p class="text-xs text-amber-800 bg-amber-50 p-2 rounded border border-amber-100 font-medium mt-1">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i><strong>年度開放提醒：</strong> 董事出席董事會年度資料於每年 1/1 開放輸入，應於 1/10 前完成前一年度開會與出列席情形（含改選前資料）之申報。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-2 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">按季 10 日</span><span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-bold">每季結束 10 日內</span></div>
+                            <h4 class="font-bold text-base text-slate-900">現金增資、公司債及私募資金運用情形季報表</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每季結束後十日內申報資金運用進度與效益。</p>
+                        </div>
+                    </div>
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-2 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">按季 10 日</span><span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-bold">每季結束 10 日內</span></div>
+                            <h4 class="font-bold text-base text-slate-900">員工認股權憑證經理人及主管當季認購情形</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每季結束後十日內申報前季高階主管認購明細。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每季結束後 15 日內 -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-emerald-800 flex items-center gap-2 border-l-4 border-emerald-500 pl-3">
+                    <i class="fa-regular fa-clock"></i> 每季結束後 15 日內 (1/15, 4/15, 7/15, 10/15 前)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-2 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">按季 15 日</span><span class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold">每季結束 15 日內</span></div>
+                            <h4 class="font-bold text-base text-slate-900">轉換/附認股權公司債/員工認股權交付新股公告</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">交付股票當季結束後十五日內辦理公告。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每季結束後 1 個月內 -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-blue-800 flex items-center gap-2 border-l-4 border-blue-600 pl-3">
+                    <i class="fa-regular fa-clock"></i> 每季結束後 1 個月內 (1/31, 4/30, 7/31, 10/31 前)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-2 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">按季 1 個月</span><span class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-bold">每季結束 1 個月內</span></div>
+                            <h4 class="font-bold text-base text-slate-900">大陸與海外子公司投資資訊明細表（季報彙整）</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每季結束後一個月內申報前一季大陸與海外子公司投資進度及經營狀況統計。</p>
+                        </div>
+                    </div>
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-2 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">按季 1 個月</span><span class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-bold">每季結束 1 個月內</span></div>
+                            <h4 class="font-bold text-base text-slate-900">關係人交易季度明細彙整申報</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每季結束後一個月內完成關係人重大交易金額與進展說明之申報核對。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每季結束後 45 日內 -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-red-800 flex items-center gap-2 border-l-4 border-red-600 pl-3">
+                    <i class="fa-regular fa-clock"></i> 每季結束後 45 日內 (5/15, 8/14, 11/14 前)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                        <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                        <div class="space-y-2 flex-grow">
+                            <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded">季財報</span><span class="text-xs bg-red-50 text-red-700 px-2.5 py-1 rounded-full font-bold">每季結束 45 日內</span></div>
+                            <h4 class="font-bold text-base text-slate-900">第一、二、三季財務報告公告與申報</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">每會計年度第 1, 2, 3 季終了後 45 日內完成會計師核閱及董事會通過後公告申報（金控公司為 60 日內）。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="page-break"></div>
+
+        <!-- ================= 分類 3：年度與特定月份申報 ================= -->
+        <section id="page-sec3" class="section-page space-y-8">
+            <div class="flex items-center justify-between border-b-2 border-blue-900 pb-3">
+                <h2 class="text-3xl font-bold text-slate-900">年度與特定月份申報事項</h2>
+                <span class="text-base text-slate-500 font-medium">包含 1~12 月特定時程與全年度作業</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- 1月特定 -->
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 md:col-span-2">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <span class="font-bold text-blue-900 text-lg"><i class="fa-solid fa-calendar-day mr-1.5"></i> 1 月特定申報事項</span>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded font-medium">1/10 ~ 1/31</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
+                        <ul class="space-y-2.5">
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>1/10 前：</strong> 董監酬金實際配發數第二階段申報、功能性委員會運作情形、前一年度董事開會及出列席情形（開放1/1~1/10）。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>1/15 前：</strong> 繳交年度上市公司上市費（由證交所通知）。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>1/15 前 (員工認股權彙總)：</strong> 申報去年度已執行及未執行員工認股權憑證資訊。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>1/15 前 (經理人及前十大員工)：</strong> 申報去年度及截至去年底國內外取得認股權憑證之經理人、部門與分支機構主管，以及前十大員工認股權人姓名與取得認購彙總情形。</span></li>
+                        </ul>
+                        <ul class="space-y-2.5">
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>1/31 前 (財測自結)：</strong> 已公開上一年度完整式財務預測者，應於年度終了後一個月內申報自結損益達成情形。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>1/31 前 (稽核資料)：</strong> 申報內部稽核人員及職務代理人名冊資料與進修情形。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>1/31 前 (員工酬勞與進修)：</strong> 經理人配發員工酬勞情形、會計主管及公司治理主管前一年度進修情形申報。</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2月特定 -->
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 md:col-span-2">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <span class="font-bold text-blue-900 text-lg"><i class="fa-solid fa-calendar-day mr-1.5"></i> 2 月特定申報事項</span>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded font-medium">2/14 & 2/28</span>
+                    </div>
+                    <ul class="text-sm space-y-2.5 text-slate-700">
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>2/14 前：</strong> 年度自結損益資訊申報（自願性申報者）。</span></li>
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>2/28 前：</strong> 申報前一年度「內部稽核計畫執行情形」。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 3月特定 -->
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 md:col-span-2">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <span class="font-bold text-red-700 text-lg"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> 3 月特定申報事項</span>
+                        <span class="text-xs bg-red-100 text-red-800 font-bold px-2.5 py-1 rounded">年度申報期</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
+                        <ul class="space-y-2.5">
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>3/15 前 (或 75 日內)：</strong> 實收資本額達百億或金融保險業完成年度自結財務資訊申報（若於75日內直接公告申報財報者免填）。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>3/31 前：</strong> 檢送年度財務報告及個體財報完成簽證公告（特定公司為75日內）。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>3/31 前：</strong> 內部控制制度聲明書完成董事會通過與公告申報。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>3/31 前 (併同年度財報)：</strong> 關係企業三書表及財務比率分析完成申報。</span></li>
+                        </ul>
+                        <ul class="space-y-2.5">
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>3/31 前：</strong> 董事會及個別董事績效評估申報上一年度評估結果。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>3/31 前 (併同年度財報)：</strong> 大陸與海外子公司投資實際數申報。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>3/31 前 (併同年度財報)：</strong> 員工人數、福利費用與平均薪資完成申報。</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 4月特定申報事項 -->
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 md:col-span-1">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <span class="font-bold text-blue-900 text-lg"><i class="fa-solid fa-calendar-day mr-1.5"></i> 4 月特定申報事項</span>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded font-medium">4/30 截止</span>
+                    </div>
+                    <ul class="text-sm space-y-2.5 text-slate-700">
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>4/30 前：</strong> 申報年度「非擔任主管職務之全時員工人數及薪資平均數」與檢查表。</span></li>
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>4/30 前 (每季按時)：</strong> 大陸與海外子公司上一季投資明細及關係人交易明細申報。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 5月特定申報事項 -->
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 md:col-span-1">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <span class="font-bold text-blue-900 text-lg"><i class="fa-solid fa-calendar-day mr-1.5"></i> 5 月特定申報事項</span>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded font-medium">5/15 截止</span>
+                    </div>
+                    <ul class="text-sm space-y-2.5 text-slate-700">
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>5/15 前：</strong> 申報第一季財務報告及會計師核閱報告。</span></li>
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>5/15 前：</strong> 大陸與海外子公司第一季投資實際數申報。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 6月特定申報事項 -->
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 md:col-span-1">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <span class="font-bold text-blue-900 text-lg"><i class="fa-solid fa-calendar-day mr-1.5"></i> 6 月特定申報事項</span>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded font-medium">股東會</span>
+                    </div>
+                    <ul class="text-sm space-y-2.5 text-slate-700">
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>6/30 前：</strong> 股東常會應於會計年度終了後6個月內召開完畢。</span></li>
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>股東會召開後 15 日內：</strong> 檢送股東年報電子檔至證交所指定資料庫。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 7~8月特定申報事項 -->
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 md:col-span-1">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <span class="font-bold text-blue-900 text-lg"><i class="fa-solid fa-calendar-day mr-1.5"></i> 7~8 月特定申報事項</span>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded font-medium">7/31 & 8/14 前</span>
+                    </div>
+                    <ul class="text-sm space-y-2.5 text-slate-700">
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>7/31 前：</strong> 申報第二季關係人交易及海外子公司投資明細。</span></li>
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>8/14 前：</strong> 申報第二季財務報告（半年報）及會計師查核/核閱報告。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 9~10月特定申報事項 -->
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 md:col-span-1">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <span class="font-bold text-blue-900 text-lg"><i class="fa-solid fa-calendar-day mr-1.5"></i> 9~10 月特定申報事項</span>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded font-medium">10/31 截止</span>
+                    </div>
+                    <ul class="text-sm space-y-2.5 text-slate-700">
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>10/31 前：</strong> 申報第三季關係人交易及海外子公司投資明細。</span></li>
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>10/31 前：</strong> 籌備次一年度內部稽核計畫及公司治理藍圖作業。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 11~12月特定申報事項 -->
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 md:col-span-1">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <span class="font-bold text-blue-900 text-lg"><i class="fa-solid fa-calendar-day mr-1.5"></i> 11~12 月特定申報事項</span>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded font-medium">11/14 & 12/31 前</span>
+                    </div>
+                    <ul class="text-sm space-y-2.5 text-slate-700">
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>11/14 前：</strong> 申報第三季財務報告及會計師核閱報告。</span></li>
+                        <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>12/31 前：</strong> 完成申報次一年度「內部稽核年度計畫」。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 全年度申報重點 -->
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 md:col-span-2">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <span class="font-bold text-blue-900 text-lg"><i class="fa-solid fa-shield-halved mr-1.5"></i> 全年度申報事項 (事件觸發與常態維持)</span>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded font-medium">全年度適用</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
+                        <ul class="space-y-2.5">
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>董事及監察人責任保險（董監責任險 D&O）：</strong> 購買或續保後即時公告申報投保金額、承保範圍及費率，保單生效日後次月 15 日前申報，並於年報揭露。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>股東常會及臨時會相關應辦事項：</strong> 召集公告、議事手冊上傳、議事錄備查及董事改選結果申報。</span></li>
+                        </ul>
+                        <ul class="space-y-2.5">
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>公司治理及永續報告書申報：</strong> 依規定時程申報永續報告書（ESG Report）及溫室氣體盤查數據。</span></li>
+                            <li class="flex items-start gap-2.5"><input type="checkbox" class="mt-1 w-4 h-4 text-blue-600"> <span><strong>重要高管及董事進修申報：</strong> 董事、監察人、會計主管及公司治理主管之法定進修時數持續維護。</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="page-break"></div>
+
+        <!-- ================= 分類 4：不定期申報事項 ================= -->
+        <section id="page-sec4" class="section-page space-y-8">
+            <div class="flex items-center justify-between border-b-2 border-blue-900 pb-3">
+                <h2 class="text-3xl font-bold text-slate-900">不定期申報事項 (依事件發生觸發)</h2>
+                <span class="text-base text-slate-500 font-medium">重大事件觸發時之即時/限期申報</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                    <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                    <div class="space-y-1.5 flex-grow">
+                        <div class="flex justify-between"><span class="text-sm font-semibold bg-red-100 text-red-800 px-2.5 py-1 rounded">即時/次日前</span><span class="text-xs bg-slate-100 px-2.5 py-1 rounded">重大訊息</span></div>
+                        <h4 class="font-bold text-base text-slate-900">重大訊息發布作業</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">發生證交法§36及重大訊息處理程序所列事件時，於事實發生日或傳媒報導次日前完成輸入。</p>
+                    </div>
+                </div>
+
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                    <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                    <div class="space-y-1.5 flex-grow">
+                        <div class="flex justify-between"><span class="text-sm font-semibold bg-blue-100 text-blue-800 px-2.5 py-1 rounded">保單生效後次月15日前</span><span class="text-xs bg-slate-100 px-2.5 py-1 rounded">公司治理</span></div>
+                        <h4 class="font-bold text-base text-slate-900">董事及監察人責任保險投保狀況</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">上市公司申報為其董事及監察人投保責任險（D&O）狀況，應於保單生效日後次月十五日前完成申報。</p>
+                    </div>
+                </div>
+
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                    <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                    <div class="space-y-1.5 flex-grow">
+                        <div class="flex justify-between"><span class="text-sm font-semibold bg-amber-100 text-amber-800 px-2.5 py-1 rounded">股東會前/後</span><span class="text-xs bg-slate-100 px-2.5 py-1 rounded">股東會</span></div>
+                        <h4 class="font-bold text-base text-slate-900">股東會召集公告與議事手冊申報</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">開會30日前召集公告、21日前上傳議事手冊、會後20日內上傳議事錄。</p>
+                    </div>
+                </div>
+
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                    <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                    <div class="space-y-1.5 flex-grow">
+                        <div class="flex justify-between"><span class="text-sm font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded">異動後 2 日內</span><span class="text-xs bg-slate-100 px-2.5 py-1 rounded">董監內部人</span></div>
+                        <h4 class="font-bold text-base text-slate-900">董監事、經理人及大股東設質/解質與設籍異動</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">內部人質權設定或質權解除後二日內辦理申報。</p>
+                    </div>
+                </div>
+
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                    <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                    <div class="space-y-1.5 flex-grow">
+                        <div class="flex justify-between"><span class="text-sm font-semibold bg-purple-100 text-purple-800 px-2.5 py-1 rounded">事實發生時</span><span class="text-xs bg-slate-100 px-2.5 py-1 rounded">公司治理</span></div>
+                        <h4 class="font-bold text-base text-slate-900">公司治理主管、會計主管、內部稽核主管異動</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">董事會通過後即時發布重訊並於規定日內完成備查登記。</p>
+                    </div>
+                </div>
+
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                    <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                    <div class="space-y-1.5 flex-grow">
+                        <div class="flex justify-between"><span class="text-sm font-semibold bg-blue-100 text-blue-800 px-2.5 py-1 rounded">2 日內</span><span class="text-xs bg-slate-100 px-2.5 py-1 rounded">庫藏股</span></div>
+                        <h4 class="font-bold text-base text-slate-900">買回本公司股份（庫藏股）申報與執行結果</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">董事會決議後二日內申報，執行期間屆滿或執行完畢後二日內申報結果。</p>
+                    </div>
+                </div>
+
+                <div class="card-box bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex gap-4">
+                    <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600">
+                    <div class="space-y-1.5 flex-grow">
+                        <div class="flex justify-between"><span class="text-sm font-semibold bg-slate-200 text-slate-800 px-2.5 py-1 rounded">發生時</span><span class="text-xs bg-slate-100 px-2.5 py-1 rounded">資產處分</span></div>
+                        <h4 class="font-bold text-base text-slate-900">取得或處分資產、背書保證超標公告</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">達到「取得或處分資產處理準則」標準時，於事實發生日起二日內辦理公告。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="bg-slate-100 border-t border-slate-200 py-6 text-center text-sm text-slate-500 no-print mt-auto">
+        <p>股票上市公司應辦業務事項總覽 Dashboard | 方便列印、簡報與業務日常核對使用</p>
+    </footer>
+
+    <!-- JS 分頁切換邏輯 -->
+    <script>
+        function switchTab(tabId) {
+            // 更新按鈕 active 樣式
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            // 切換區塊顯示
+            const sections = document.querySelectorAll('.section-page');
+            if (tabId === 'all') {
+                sections.forEach(sec => sec.style.display = 'block');
+            } else {
+                sections.forEach(sec => sec.style.display = 'none');
+                const target = document.getElementById('page-' + tabId);
+                if (target) target.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

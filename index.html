@@ -136,6 +136,14 @@
             scroll-margin-top: 145px;
         }
 
+        /* 搜尋螢光高亮樣式 */
+        mark.search-highlight {
+            background-color: #fef08a;
+            color: #854d0e;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
         /* 列印優化 */
         @media print {
             .no-print {
@@ -187,10 +195,13 @@
                 
                 <!-- 右側：搜尋與操作按鈕 -->
                 <div class="flex items-center gap-3">
-                    <!-- 關鍵字搜尋框 -->
+                    <!-- 關鍵字搜尋框（含清除按鈕） -->
                     <div class="relative flex-1 sm:w-64">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="搜尋申報事項或關鍵字..." class="w-full bg-slate-800 text-white placeholder-slate-400 text-sm rounded-lg pl-9 pr-3 py-2 border border-slate-700/80 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
+                        <input type="text" id="searchInput" oninput="filterItems()" placeholder="搜尋申報事項或關鍵字..." class="w-full bg-slate-800 text-white placeholder-slate-400 text-sm rounded-lg pl-9 pr-9 py-2 border border-slate-700/80 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition focus:outline-none">
+                            <i class="fa-solid fa-xmark text-base"></i>
+                        </button>
                     </div>
 
                     <!-- 列印按鈕 -->
@@ -955,15 +966,74 @@
             }
         }
 
-        // 搜尋篩選功能
+        // 移除高亮標示
+        function removeHighlights() {
+            const highlights = document.querySelectorAll('mark.search-highlight');
+            highlights.forEach(highlight => {
+                const parent = highlight.parentNode;
+                parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+                parent.normalize();
+            });
+        }
+
+        // 使用安全的 Element-level 替換高亮關鍵字
+        function highlightTextInElement(element, query) {
+            const textNodes = [];
+            const walk = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+
+            while (node = walk.nextNode()) {
+                if (node.parentNode && !['SCRIPT', 'STYLE', 'INPUT', 'TEXTAREA', 'MARK'].includes(node.parentNode.tagName)) {
+                    textNodes.push(node);
+                }
+            }
+
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+
+            textNodes.forEach(node => {
+                if (node.nodeValue && regex.test(node.nodeValue)) {
+                    const parent = node.parentNode;
+                    const span = document.createElement('span');
+                    span.innerHTML = node.nodeValue.replace(regex, '<mark class="search-highlight">$1</mark>');
+                    parent.replaceChild(span, node);
+                }
+            });
+        }
+
+        // 清除搜尋按鈕功能
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            filterItems();
+            input.focus();
+        }
+
+        // 搜尋篩選與黃色螢光高亮功能
         function filterItems() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            const query = input.value.trim();
+            const lowerQuery = query.toLowerCase();
+
+            // 控制 "X" 清除按鈕顯示/隱藏
+            if (query.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            // 先清除上一次高亮
+            removeHighlights();
+
             const cards = document.querySelectorAll('.card-box');
 
             cards.forEach(card => {
                 const text = card.innerText.toLowerCase();
-                if (text.includes(query)) {
+                if (lowerQuery === '' || text.includes(lowerQuery)) {
                     card.style.display = '';
+                    if (query !== '') {
+                        highlightTextInElement(card, query);
+                    }
                 } else {
                     card.style.display = 'none';
                 }
@@ -1026,7 +1096,7 @@
 
         mainHeader.addEventListener('mouseleave', () => {
             isHovered = false;
-            // 修正歷史滾動位置，避免滑鼠移開後因為舊的數值立即觸發 updateHeader() 抖動
+            // 修正歷史滾動位置，避免滑鼠移開後因為舊的數值領域觸發 updateHeader() 抖動
             lastScrollY = window.scrollY;
             
             // 增加 300ms 緩衝計時，確保滑鼠快速離去時動畫平滑且不抖動
